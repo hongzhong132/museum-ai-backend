@@ -4,6 +4,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 
+from app.database import Base, engine
 from app.routes.halls import router as halls_router
 from app.routes.exhibits import router as exhibits_router
 from app.routes.route_plan import router as route_router
@@ -11,6 +12,9 @@ from app.routes.route_plan import router as route_router
 BASE_DIR = Path(__file__).resolve().parent.parent
 MEDIA_DIR = BASE_DIR / "media"
 MEDIA_DIR.mkdir(parents=True, exist_ok=True)
+
+# 启动时自动建表（如果表不存在）
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title="Museum AI Backend",
