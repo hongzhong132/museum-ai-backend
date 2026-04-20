@@ -3,12 +3,17 @@ import os
 from pathlib import Path
 
 from app import models
-from app.database import SessionLocal
+from app.database import SessionLocal, Base, engine
 
 BASE_DIR = Path(__file__).resolve().parent.parent
 DATA_DIR = BASE_DIR / "data"
 
 DELETE_MISSING = os.getenv("DELETE_MISSING", "0").strip().lower() in {"1", "true", "yes", "on"}
+
+
+def ensure_tables():
+    Base.metadata.create_all(bind=engine)
+    print("已确保数据库表存在。")
 
 
 def to_int(value: str | None, default: int = 0) -> int:
@@ -24,7 +29,7 @@ def to_float(value: str | None, default: float = 0.0) -> float:
 
 
 def to_bool_int(value: str | None, default: int = 0) -> int:
-    if value is None:
+    if value is None or str(value).strip() == "":
         return default
     value = str(value).strip().lower()
     return 1 if value in {"1", "true", "yes", "y", "on"} else 0
@@ -45,7 +50,9 @@ def load_csv_rows(filename: str) -> tuple[list[dict[str, str]], bool]:
 
     with path.open("r", encoding="utf-8-sig", newline="") as f:
         reader = csv.DictReader(f)
-        return list(reader), True
+        rows = list(reader)
+        print(f"读取 {filename}: {len(rows)} 行")
+        return rows, True
 
 
 def import_halls(db) -> set[str]:
@@ -58,14 +65,20 @@ def import_halls(db) -> set[str]:
     csv_codes: set[str] = set()
 
     for row in rows:
-        code = row["code"].strip()
+        code = safe_str(row.get("code"))
+        name = safe_str(row.get("name"))
+
+        if not code or not name:
+            print(f"跳过 halls.csv 一行：缺少 code 或 name，row={row}")
+            continue
+
         csv_codes.add(code)
 
         existing = db.query(models.MuseumHall).filter(models.MuseumHall.code == code).first()
 
         payload = {
             "code": code,
-            "name": row["name"].strip(),
+            "name": name,
             "floor": safe_str(row.get("floor")),
             "zone": safe_str(row.get("zone")),
             "theme": safe_str(row.get("theme")),
@@ -102,12 +115,18 @@ def import_exhibits(db) -> set[str]:
     csv_codes: set[str] = set()
 
     for row in rows:
-        hall_code = row["hall_code"].strip()
-        hall_id = hall_map.get(hall_code)
-        code = row["code"].strip()
+        hall_code = safe_str(row.get("hall_code"))
+        code = safe_str(row.get("code"))
+        name = safe_str(row.get("name"))
 
+        if not hall_code or not code or not name:
+            skipped += 1
+            print(f"跳过展品：缺少 hall_code/code/name，row={row}")
+            continue
+
+        hall_id = hall_map.get(hall_code)
         if hall_id is None:
-            print(f"跳过展品 {row.get('name', code)}：找不到 hall_code={hall_code}")
+            print(f"跳过展品 {name}：找不到 hall_code={hall_code}")
             skipped += 1
             continue
 
@@ -116,7 +135,7 @@ def import_exhibits(db) -> set[str]:
 
         payload = {
             "hall_id": hall_id,
-            "name": row["name"].strip(),
+            "name": name,
             "code": code,
             "era": safe_str(row.get("era")),
             "dynasty": safe_str(row.get("dynasty")),
@@ -175,9 +194,7 @@ def import_exhibit_assets(db) -> set[str] | None:
     if not exists:
         return None
 
-    exhibit_map = {
-        exhibit.code: exhibit for exhibit in db.query(models.Exhibit).all()
-    }
+    exhibit_map = {exhibit.code: exhibit for exhibit in db.query(models.Exhibit).all()}
 
     created = 0
     updated = 0
@@ -227,8 +244,7 @@ def import_exhibit_assets(db) -> set[str] | None:
             created += 1
             print(f"新增展品资产: {exhibit.name}")
 
-        # 顺手把主图回填到 exhibits.image_url，兼容你现有前端
-        if payload["cover_image_url"] and not safe_str(exhibit.image_url):
+        if payload["cover_image_url"]:
             exhibit.image_url = payload["cover_image_url"]
 
     db.commit()
@@ -249,8 +265,13 @@ def import_hall_edges(db) -> set[tuple[str, str]] | None:
     csv_keys: set[tuple[str, str]] = set()
 
     for row in rows:
-        from_code = row["from_hall_code"].strip()
-        to_code = row["to_hall_code"].strip()
+        from_code = safe_str(row.get("from_hall_code"))
+        to_code = safe_str(row.get("to_hall_code"))
+
+        if not from_code or not to_code:
+            skipped += 1
+            print(f"跳过 hall_edge：缺少 from_hall_code 或 to_hall_code，row={row}")
+            continue
 
         from_hall_id = hall_map.get(from_code)
         to_hall_id = hall_map.get(to_code)
@@ -317,10 +338,15 @@ def import_narrative_relations(db) -> set[tuple[str, str, str, str]] | None:
     csv_keys: set[tuple[str, str, str, str]] = set()
 
     for row in rows:
-        source_type = row["source_type"].strip()
-        source_code = row["source_code"].strip()
-        target_type = row["target_type"].strip()
-        target_code = row["target_code"].strip()
+        source_type = safe_str(row.get("source_type"))
+        source_code = safe_str(row.get("source_code"))
+        target_type = safe_str(row.get("target_type"))
+        target_code = safe_str(row.get("target_code"))
+
+        if not source_type or not source_code or not target_type or not target_code:
+            skipped += 1
+            print(f"跳过 narrative_relation：缺少关键字段，row={row}")
+            continue
 
         source_id = resolve_id(source_type, source_code)
         target_id = resolve_id(target_type, target_code)
@@ -472,6 +498,8 @@ def cleanup_missing_halls(db, csv_hall_codes: set[str]):
 
 
 def main():
+    ensure_tables()
+
     db = SessionLocal()
     try:
         csv_hall_codes = import_halls(db)
