@@ -1,0 +1,84 @@
+:root {
+  --brand-50: #f7efe3;
+  --brand-100: #f0e0c5;
+  --brand-500: #b37a3d;
+  --brand-600: #8c5b2d;
+  --brand-700: #70451f;
+  --ink-900: #1c2432;
+  --ink-700: #394253;
+  --ink-600: #5a6475;
+  --ink-500: #7a8496;
+  --line-soft: rgba(19, 24, 36, 0.08);
+  --shadow-soft: 0 18px 40px rgba(23, 28, 38, 0.08);
+}
+
+html,
+body,
+#app {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  font-family: Inter, 'PingFang SC', 'Microsoft YaHei', Arial, Helvetica, sans-serif;
+  color: var(--ink-900);
+  background:
+    radial-gradient(circle at top left, rgba(217, 181, 116, 0.14), transparent 24%),
+    radial-gradient(circle at top right, rgba(64, 158, 255, 0.08), transparent 20%),
+    linear-gradient(180deg, #f7f5f1 0%, #f3f5f8 38%, #eef2f6 100%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+button,
+input,
+textarea,
+select {
+  font: inherit;
+}
+
+.surface-card,
+.surface-card.el-card {
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: rgba(255, 255, 255, 0.78);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(16px);
+  border-radius: 28px;
+}
+
+.surface-card.el-card .el-card__header {
+  border-bottom: 1px solid var(--line-soft);
+  padding: 18px 22px;
+}
+
+.surface-card.el-card .el-card__body {
+  padding: 22px;
+}
+
+.el-form-item__label {
+  color: var(--ink-900) !important;
+  font-weight: 600 !important;
+}
+
+.el-input__wrapper,
+.el-textarea__inner,
+.el-select__wrapper,
+.el-input-number {
+  border-radius: 14px !important;
+}
+
+.el-button--primary {
+  --el-button-bg-color: #8c5b2d;
+  --el-button-border-color: #8c5b2d;
+  --el-button-hover-bg-color: #9d6a39;
+  --el-button-hover-border-color: #9d6a39;
+  --el-button-active-bg-color: #74461f;
+  --el-button-active-border-color: #74461f;
+}
+
+.el-tag {
+  border-radius: 999px;
+}

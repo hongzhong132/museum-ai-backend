@@ -1,0 +1,53 @@
+{
+  "pages": [
+    {
+      "path": "pages/index/index",
+      "style": {
+        "navigationBarTitleText": "楚韵导览"
+      }
+    },
+    {
+      "path": "pages/route/result",
+      "style": {
+        "navigationBarTitleText": "推荐路线"
+      }
+    },
+    {
+      "path": "pages/exhibit/detail",
+      "style": {
+        "navigationBarTitleText": "文物详情"
+      }
+    },
+    {
+      "path": "pages/exhibit/graph",
+      "style": {
+        "navigationBarTitleText": "知识图谱"
+      }
+    },
+    {
+      "path": "pages/exhibit/related",
+      "style": {
+        "navigationBarTitleText": "相关文物"
+      }
+    },
+    {
+      "path": "pages/replan/index",
+      "style": {
+        "navigationBarTitleText": "中途重规划"
+      }
+    },
+    {
+      "path": "pages/creative/index",
+      "style": {
+        "navigationBarTitleText": "AI 文创共创"
+      }
+    }
+  ],
+  "globalStyle": {
+    "navigationBarTextStyle": "black",
+    "navigationBarTitleText": "楚韵导览",
+    "navigationBarBackgroundColor": "#F7F1E7",
+    "backgroundColor": "#F7F1E7"
+  },
+  "uniIdRouter": {}
+}
