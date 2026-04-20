@@ -1,6 +1,6 @@
 const USE_REMOTE_BACKEND = true
 
-const REMOTE_BASE_URL = 'https://museum-api-248476-6-1423637015.sh.run.tcloudbase.com'
+const REMOTE_BASE_URL = 'https://api.chuyun-guide.com.cn'
 const LOCAL_BASE_URL = 'http://10.110.62.221:9000'
 const DEFAULT_TIMEOUT = 60000
 

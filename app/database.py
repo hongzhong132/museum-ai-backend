@@ -9,8 +9,13 @@ DEFAULT_LOCAL_DATABASE_URL = (
 
 DATABASE_URL = os.getenv("DATABASE_URL", DEFAULT_LOCAL_DATABASE_URL)
 
+# 兼容 Railway 默认给的 mysql:// 连接串
+if DATABASE_URL.startswith("mysql://"):
+    DATABASE_URL = DATABASE_URL.replace("mysql://", "mysql+pymysql://", 1)
+
 engine_kwargs = {
-    "echo": True
+    "echo": True,
+    "pool_pre_ping": True
 }
 
 if DATABASE_URL.startswith("sqlite"):
