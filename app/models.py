@@ -7,14 +7,14 @@ class MuseumHall(Base):
     __tablename__ = "museum_halls"
 
     id = Column(Integer, primary_key=True, index=True)
-    name = Column(String(100), nullable=False)
-    code = Column(String(100), nullable=False)
+    name = Column(String(100), nullable=False, index=True)
+    code = Column(String(100), nullable=False, unique=True, index=True)
     floor = Column(String(20))
     zone = Column(String(50))
     theme = Column(String(100))
     summary = Column(Text)
-    recommended_duration_min = Column(Integer)
-    sort_order = Column(Integer)
+    recommended_duration_min = Column(Integer, default=15)
+    sort_order = Column(Integer, default=999)
 
 
 class Exhibit(Base):
@@ -22,7 +22,7 @@ class Exhibit(Base):
 
     id = Column(Integer, primary_key=True, index=True)
     hall_id = Column(Integer, nullable=False, index=True)
-    name = Column(String(100), nullable=False)
+    name = Column(String(100), nullable=False, index=True)
     code = Column(String(100), nullable=False, index=True, unique=True)
 
     era = Column(String(100))
@@ -65,11 +65,11 @@ class Exhibit(Base):
 
     keywords = Column(Text)
 
-    is_featured = Column(Integer)
-    recommended_priority = Column(Integer)
-    recommended_duration_min = Column(Integer)
+    is_featured = Column(Integer, default=0)
+    recommended_priority = Column(Integer, default=0)
+    recommended_duration_min = Column(Integer, default=5)
 
-    image_url = Column(String(255))
+    image_url = Column(String(500))
 
 
 class ExhibitAsset(Base):
@@ -95,12 +95,12 @@ class HallEdge(Base):
     __tablename__ = "hall_edges"
 
     id = Column(Integer, primary_key=True, index=True)
-    from_hall_id = Column(Integer, nullable=False)
-    to_hall_id = Column(Integer, nullable=False)
-    walk_minutes = Column(Integer)
-    is_direct = Column(Integer)
-    is_recommended = Column(Integer)
-    is_backtrack_heavy = Column(Integer)
+    from_hall_id = Column(Integer, nullable=False, index=True)
+    to_hall_id = Column(Integer, nullable=False, index=True)
+    walk_minutes = Column(Integer, default=0)
+    is_direct = Column(Integer, default=0)
+    is_recommended = Column(Integer, default=0)
+    is_backtrack_heavy = Column(Integer, default=0)
     remark = Column(String(255))
 
 
@@ -108,10 +108,10 @@ class NarrativeRelation(Base):
     __tablename__ = "narrative_relations"
 
     id = Column(Integer, primary_key=True, index=True)
-    source_type = Column(String(20), nullable=False)
-    source_id = Column(Integer, nullable=False)
-    target_type = Column(String(20), nullable=False)
-    target_id = Column(Integer, nullable=False)
+    source_type = Column(String(20), nullable=False, index=True)
+    source_id = Column(Integer, nullable=False, index=True)
+    target_type = Column(String(20), nullable=False, index=True)
+    target_id = Column(Integer, nullable=False, index=True)
     relation_type = Column(String(50))
     relation_summary = Column(Text)
-    strength_score = Column(DECIMAL(3, 2))
+    strength_score = Column(DECIMAL(3, 2), default=0.0)
