@@ -64,8 +64,23 @@
 					<view v-if="aiExplainSourceText" class="source-chip">{{ aiExplainSourceText }}</view>
 				</view>
 
+				<view class="mode-panel">
+					<view class="mode-row">
+						<view
+							v-for="item in explainModeOptions"
+							:key="item.value"
+							class="mode-chip"
+							:class="{ 'mode-chip-active': explainMode === item.value }"
+							@tap="changeExplainMode(item.value)"
+						>
+							{{ item.label }}
+						</view>
+					</view>
+					<view class="mode-hint">{{ currentExplainModeHint }}</view>
+				</view>
+
 				<view v-if="aiExplainPending" class="ai-placeholder">
-					AI 正在结合当前文物生成更有针对性的讲解...
+					AI 正在生成{{ currentExplainModeLabel }}讲解...
 				</view>
 
 				<view v-else-if="hasAiExplain">
@@ -189,6 +204,13 @@ const aiExplainPending = ref(false)
 const aiExplainError = ref('')
 const errorText = ref('')
 
+const explainMode = ref('normal')
+const explainModeOptions = [
+	{ value: 'normal', label: '普通讲解', hint: '适合大多数观众，兼顾信息量与阅读轻松度。' },
+	{ value: 'deep', label: '深度讲解', hint: '更强调历史、工艺与文化背景，适合答辩和深入了解。' },
+	{ value: 'child', label: '儿童讲解', hint: '语言更轻松易懂，更适合低龄观众或亲子导览。' }
+]
+
 const speechStatus = ref('idle')
 const speechHintText = ref('')
 const speechRate = ref(1)
@@ -238,6 +260,13 @@ const normalizeExplainPoint = (item) => {
 	}
 	return ''
 }
+
+const currentExplainMode = computed(() => {
+	return explainModeOptions.find(item => item.value === explainMode.value) || explainModeOptions[0]
+})
+
+const currentExplainModeLabel = computed(() => currentExplainMode.value.label)
+const currentExplainModeHint = computed(() => currentExplainMode.value.hint)
 
 const hallText = computed(() => safeText(exhibit.value?.hall?.name) || safeText(exhibit.value?.hall_name) || '')
 
@@ -533,7 +562,9 @@ const fetchAiExplain = async () => {
 	aiExplainData.value = {}
 
 	try {
-		const result = await explainExhibit(exhibitId.value, { mode: 'normal' })
+		const result = await explainExhibit(exhibitId.value, {
+			mode: explainMode.value
+		})
 		if (requestId !== explainRequestSeed) return
 		aiExplainData.value = result || {}
 	} catch (error) {
@@ -546,6 +577,13 @@ const fetchAiExplain = async () => {
 			aiExplainPending.value = false
 		}
 	}
+}
+
+const changeExplainMode = (mode) => {
+	if (!mode || mode === explainMode.value) return
+	explainMode.value = mode
+	resetSpeechState()
+	fetchAiExplain()
 }
 
 const fetchExhibitData = async () => {
@@ -561,7 +599,6 @@ const fetchExhibitData = async () => {
 
 	try {
 		exhibit.value = await getExhibitDetail(exhibitId.value)
-		fetchAiExplain()
 
 		const [assetsRes, graphRes] = await Promise.allSettled([
 			getExhibitAssets(exhibitId.value),
@@ -570,6 +607,8 @@ const fetchExhibitData = async () => {
 
 		if (assetsRes.status === 'fulfilled') assetData.value = assetsRes.value || {}
 		if (graphRes.status === 'fulfilled') graphData.value = graphRes.value || {}
+
+		fetchAiExplain()
 	} catch (error) {
 		console.error('文物详情获取失败：', error)
 		errorText.value = error?.message || '文物详情加载失败'
@@ -718,7 +757,8 @@ onUnload(() => {
 .ai-placeholder,
 .ai-watch-text,
 .ai-quote,
-.ai-takeaway-text {
+.ai-takeaway-text,
+.mode-hint {
 	font-size: 25rpx;
 	line-height: 1.82;
 	color: var(--muted);
@@ -825,6 +865,38 @@ onUnload(() => {
 	color: var(--brand-deep);
 	font-size: 23rpx;
 	line-height: 1.3;
+}
+
+.mode-panel {
+	margin-top: 18rpx;
+	margin-bottom: 10rpx;
+}
+
+.mode-row {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 14rpx;
+}
+
+.mode-chip {
+	padding: 12rpx 20rpx;
+	border-radius: 999rpx;
+	background: rgba(47, 36, 29, 0.06);
+	color: #665b51;
+	font-size: 24rpx;
+	line-height: 1.3;
+}
+
+.mode-chip-active {
+	background: linear-gradient(135deg, var(--brand), var(--brand-deep));
+	color: #fffdf8;
+	font-weight: 700;
+	box-shadow: 0 12rpx 24rpx rgba(73, 103, 86, 0.18);
+}
+
+.mode-hint {
+	margin-top: 12rpx;
+	font-size: 23rpx;
 }
 
 .text-block {
